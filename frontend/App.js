@@ -1,16 +1,34 @@
 import { StatusBar } from "expo-status-bar";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import LoginScreen from "./screens/LoginScreen";
-import HomeScreen from "./screens/HomeScreen";
+import { NavigationContainer } from "@react-navigation/native";
+import { useState } from "react";
+import BottomNavigator from "./constants/BottomNavigator";
 
 export default function App() {
-  return (
-    <View style={styles.container}>
-      <StatusBar backgroundColor="black" style="inverted" />
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-      {/* <LoginScreen /> */}
-      <HomeScreen />
-    </View>
+  const handleLogin = () => {
+    setIsLoggedIn(true);
+  };
+  const handleLogout = () => {
+    setIsLoggedIn(false);
+  };
+
+  return (
+    <NavigationContainer>
+      <View style={styles.container}>
+        <StatusBar backgroundColor="black" style="inverted" />
+
+        {isLoggedIn ? (
+          <>
+            <BottomNavigator onLogOut={handleLogout} />
+          </>
+        ) : (
+          <LoginScreen onLogin={handleLogin} />
+        )}
+      </View>
+    </NavigationContainer>
   );
 }
 

@@ -8,9 +8,15 @@ import {
   TouchableOpacity,
   Image,
 } from "react-native";
-import React from "react";
+import React, { useState } from "react";
 
-const LoginScreen = () => {
+const LoginScreen = ({ onLogin }) => {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+
+  const handleLogin = () => {
+    onLogin();
+  };
   return (
     <SafeAreaView style={styles.container}>
       <ImageBackground
@@ -26,11 +32,22 @@ const LoginScreen = () => {
           <Text style={styles.header}>Login</Text>
 
           <Text style={styles.label}>User Name</Text>
-          <TextInput style={styles.txtInput} placeholder="UserName" />
+          <TextInput
+            style={styles.txtInput}
+            placeholder="UserName"
+            value={username}
+            onChangeText={setUsername}
+          />
 
           <Text style={styles.label}>Password</Text>
-          <TextInput style={styles.txtInput} placeholder="Password" />
-          <TouchableOpacity style={styles.button}>
+          <TextInput
+            style={styles.txtInput}
+            placeholder="Password"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
+          />
+          <TouchableOpacity style={styles.button} onPress={handleLogin}>
             <Text
               style={{
                 fontWeight: "bold",
