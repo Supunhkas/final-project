@@ -5,13 +5,28 @@ import {
   TouchableOpacity,
   StyleSheet,
   SafeAreaView,
+  Image,
 } from "react-native";
 import { AntDesign, Feather } from "@expo/vector-icons";
 import { StatusBar } from "expo-status-bar";
 import { useNavigation } from "@react-navigation/native";
+import * as ImagePicker from "expo-image-picker";
 
 const HomeScreen = () => {
   const navigation = useNavigation();
+  const handleChooseFromGallery = () => {
+    ImagePicker.launchImageLibraryAsync(
+      {
+        mediaType: "photo",
+        includeBase64: false,
+        maxHeight: 200,
+        maxWidth: 200,
+      },
+      (response) => {
+        console.log(response);
+      }
+    );
+  };
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar backgroundColor="#4CAF50" style="inverted" />
@@ -35,6 +50,10 @@ const HomeScreen = () => {
         >
           Scan the Image for get Diagnose
         </Text>
+        <Image
+          source={require("../assets/scan.jpg")}
+          style={{ resizeMode: "contain", height: 160, width: 160 }}
+        />
         <TouchableOpacity
           style={styles.button}
           onPress={() => navigation.navigate("Camera")}
@@ -48,7 +67,10 @@ const HomeScreen = () => {
           <Text style={styles.buttonText}>Take a Photo</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.button}>
+        {/* <TouchableOpacity
+          style={styles.button}
+          onPress={handleChooseFromGallery}
+        >
           <Feather
             name="image"
             size={30}
@@ -56,7 +78,7 @@ const HomeScreen = () => {
             style={styles.buttonIcon}
           />
           <Text style={styles.buttonText}>Choose from Gallery</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </View>
     </SafeAreaView>
   );

@@ -5,7 +5,7 @@ import {
   View,
   TouchableOpacity,
   Image,
-  FlatList,
+  ActivityIndicator,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { Camera } from "expo-camera";
@@ -13,6 +13,7 @@ import * as ImagePicker from "expo-image-picker";
 import { StatusBar } from "expo-status-bar";
 import { Ionicons } from "@expo/vector-icons";
 import { Feather } from "@expo/vector-icons";
+
 import axios from "axios";
 
 const CameraScreen = () => {
@@ -88,8 +89,8 @@ const CameraScreen = () => {
       setIsLoading(false);
       setShowResults(true); // show results when response received
       setTimeout(() => {
-        setShowResults(false); // hide results after 8 seconds
-      }, 8000);
+        setShowResults(false);
+      }, 10000);
     } catch (error) {
       console.error(error);
       setIsLoading(false);
@@ -135,29 +136,43 @@ const CameraScreen = () => {
           </TouchableOpacity>
         </View>
       </Camera>
-      {isLoading && <Text style={styles.loadingText}>Loading...</Text>}
+      {isLoading && (
+        <>
+          <ActivityIndicator
+            size="large"
+            color="#00ff00"
+            style={styles.spinner}
+          />
+          <Text style={styles.loadingText}>loading</Text>
+        </>
+      )}
 
       {showResults ? (
         predictions.length > 0 ? (
           <View style={styles.resultContainer}>
             <Text style={styles.resultText}>Time: {result.time}</Text>
-            <Text style={styles.resultText}>Predictions:</Text>
-            <FlatList
-              data={predictions}
-              keyExtractor={(item) => item.label}
-              renderItem={({ item }) => (
-                <View style={styles.predictionContainer}>
-                  <Text style={styles.predictionLabel}>{item.class} </Text>
-                  <Text style={styles.predictionValue}>
-                    {(item.confidence * 100).toFixed(2)}%
+            <View style={styles.card}>
+              <Text style={styles.cardTitle}>Predictions:</Text>
+              {predictions.map((prediction, index) => (
+                <View key={index} style={styles.predictionContainer}>
+                  <Text style={styles.predictionLabel}>{prediction.class}</Text>
+                  <Text
+                    style={[
+                      styles.predictionValue,
+                      prediction.confidence > 0.5
+                        ? styles.predictionValueRed
+                        : styles.predictionValueGreen,
+                    ]}
+                  >
+                    {(prediction.confidence * 100).toFixed(2)}%
                   </Text>
                 </View>
-              )}
-            />
+              ))}
+            </View>
           </View>
         ) : (
           <View style={styles.resultContainer}>
-            <Text style={styles.resultText}>No issues detected.</Text>
+            <Text style={styles.resultText}>Great! No issues detected.</Text>
           </View>
         )
       ) : (
@@ -214,13 +229,18 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#000",
   },
+  spinner: {
+    position: "absolute",
+    alignSelf: "center",
+    top: 250,
+  },
   loadingText: {
     position: "absolute",
-    top: 20,
-    left: 20,
-    fontSize: 20,
+    alignSelf: "center",
+    top: 300,
     fontWeight: "bold",
-    color: "white",
+    fontSize: 16,
+    color: "#fff",
   },
   resultContainer: {
     position: "absolute",
@@ -229,6 +249,40 @@ const styles = StyleSheet.create({
     backgroundColor: "white",
     padding: 10,
     borderRadius: 10,
+  },
+  card: {
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    padding: 10,
+    marginTop: 10,
+    marginBottom: 20,
+    elevation: 3,
+  },
+  cardTitle: {
+    fontWeight: "bold",
+    marginBottom: 5,
+    fontSize: 16,
+  },
+  predictionContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 5,
+  },
+  predictionLabel: {
+    fontSize: 14,
+    fontWeight: "bold",
+    flex: 1,
+  },
+  predictionValue: {
+    fontSize: 14,
+    textAlign: "right",
+    flex: 1,
+  },
+  predictionValueGreen: {
+    color: "green",
+  },
+  predictionValueRed: {
+    color: "red",
   },
 });
 export default CameraScreen;
