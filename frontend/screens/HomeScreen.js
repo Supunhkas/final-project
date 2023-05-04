@@ -8,8 +8,10 @@ import {
 } from "react-native";
 import { AntDesign, Feather } from "@expo/vector-icons";
 import { StatusBar } from "expo-status-bar";
+import { useNavigation } from "@react-navigation/native";
 
-const HomeScreen = ({ navigation }) => {
+const HomeScreen = () => {
+  const navigation = useNavigation();
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar backgroundColor="#4CAF50" style="inverted" />

@@ -1,12 +1,24 @@
 import React, { useState, useEffect, useRef } from "react";
-import { StyleSheet, Text, View, TouchableOpacity, Image } from "react-native";
+import {
+  StyleSheet,
+  Text,
+  View,
+  TouchableOpacity,
+  Image,
+  FlatList,
+} from "react-native";
+import { useNavigation } from "@react-navigation/native";
 import { Camera } from "expo-camera";
 import * as ImagePicker from "expo-image-picker";
 import { StatusBar } from "expo-status-bar";
 import { Ionicons } from "@expo/vector-icons";
 import { Feather } from "@expo/vector-icons";
+import axios from "axios";
 
 const CameraScreen = () => {
+  const navigation = useNavigation();
+  const [predictions, setPredictions] = useState([]);
+  const [showResults, setShowResults] = useState(false);
   const [hasPermission, setHasPermission] = useState(null);
   const [type, setType] = useState(Camera.Constants.Type.back);
   const [imageUri, setImageUri] = useState(null);
@@ -21,16 +33,12 @@ const CameraScreen = () => {
     })();
   }, []);
 
-  useEffect(() => {
-    return () => {
-      if (cameraRef.current) {
-        cameraRef.current.pausePreview();
-        cameraRef.current = null;
-      } else {
-        cameraRef.current.resumePreview();
-      }
-    };
-  }, []);
+  const handleBackPress = () => {
+    if (cameraRef.current) {
+      cameraRef.current.pausePreview();
+    }
+    navigation.goBack();
+  };
 
   const takePicture = async () => {
     if (cameraRef.current) {
@@ -60,22 +68,28 @@ const CameraScreen = () => {
       sendImageToServer(result.base64);
     }
   };
-
   const sendImageToServer = async (base64Image) => {
     try {
-      const response = await fetch(
-        "https://yourserver.com/detect-nail-disease",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ image: base64Image }),
-        }
-      );
-      const result = await response.json();
-      setResult(result);
+      const response = await axios({
+        method: "POST",
+        url: "https://detect.roboflow.com/nail-disease-detection-system/3",
+        params: {
+          api_key: "uaZamnbnrVZrva9hch1A",
+        },
+        data: base64Image,
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+      });
+
+      setResult({ time: response.data.time });
+
+      setPredictions(response.data.predictions);
       setIsLoading(false);
+      setShowResults(true); // show results when response received
+      setTimeout(() => {
+        setShowResults(false); // hide results after 8 seconds
+      }, 8000);
     } catch (error) {
       console.error(error);
       setIsLoading(false);
@@ -92,7 +106,12 @@ const CameraScreen = () => {
     <View style={styles.container}>
       <StatusBar backgroundColor="black" style="light" />
 
-      <Camera style={styles.camera} type={type} ref={cameraRef}>
+      <Camera
+        style={styles.camera}
+        type={type}
+        ref={cameraRef}
+        autoFocus={Camera.Constants.AutoFocus.on}
+      >
         <View style={styles.buttonContainer}>
           <TouchableOpacity
             style={styles.Cbutton}
@@ -109,21 +128,44 @@ const CameraScreen = () => {
 
           <TouchableOpacity style={styles.button} onPress={takePicture}>
             <Ionicons name="camera" size={38} />
-            {/* <Text style={styles.buttonText}> Capture </Text> */}
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.Cbutton} onPress={pickImage}>
             <Ionicons name="images" size={24} />
-            {/* <Text style={styles.buttonText}> Pick Image </Text> */}
           </TouchableOpacity>
         </View>
       </Camera>
       {isLoading && <Text style={styles.loadingText}>Loading...</Text>}
-      {result && (
+
+      {showResults ? (
+        predictions.length > 0 ? (
+          <View style={styles.resultContainer}>
+            <Text style={styles.resultText}>Time: {result.time}</Text>
+            <Text style={styles.resultText}>Predictions:</Text>
+            <FlatList
+              data={predictions}
+              keyExtractor={(item) => item.label}
+              renderItem={({ item }) => (
+                <View style={styles.predictionContainer}>
+                  <Text style={styles.predictionLabel}>{item.class} </Text>
+                  <Text style={styles.predictionValue}>
+                    {(item.confidence * 100).toFixed(2)}%
+                  </Text>
+                </View>
+              )}
+            />
+          </View>
+        ) : (
+          <View style={styles.resultContainer}>
+            <Text style={styles.resultText}>No issues detected.</Text>
+          </View>
+        )
+      ) : (
         <View style={styles.resultContainer}>
-          <Text style={styles.resultText}>{result}</Text>
+          <Text style={styles.resultText}>Capture your Nail to check..</Text>
         </View>
       )}
+
       {imageUri && <Image source={{ uri: imageUri }} style={styles.image} />}
     </View>
   );
@@ -182,7 +224,7 @@ const styles = StyleSheet.create({
   },
   resultContainer: {
     position: "absolute",
-    top: 20,
+    top: 50,
     right: 20,
     backgroundColor: "white",
     padding: 10,
